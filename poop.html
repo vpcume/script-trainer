@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>script trainer</title>
+</head>
+<body>
+    <b id="lettertext"></b> <br>
+    <canvas id="myCanvas" width="400" height="400" style="border:1px solid #000000;"></canvas>
+    <img id="letterimage"> <br>
+    <button type="button" onclick="clearCanvas();">Clear</button>
+    <button type="button" onclick="randomLetter();">Random Letter</button>
+    <button type="button" onclick="checkLetter();">Check</button> <br>
+    <div id="list"></div>
+
+    <script>
+        var c = document.getElementById("myCanvas");
+        var lettertext = document.getElementById("lettertext");
+        var letterimage = document.getElementById("letterimage");
+        var ctx = c.getContext("2d");
+        var lastX;
+        var lastY;
+        var isDrawing = false;
+        ctx.lineWidth = 3;
+
+        const yoylese = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'];
+
+        var curLetter = yoylese[Math.floor(Math.random() * yoylese.length)];
+        lettertext.innerHTML = curLetter.toUpperCase();
+
+        const list = document.getElementById("list");
+
+        yoylese.forEach((letter, index) => {
+        list.innerHTML += `
+            <label>
+            <input type="checkbox" value="${letter}" data-index="${index}" checked>
+            ${letter}
+            </label>
+            
+        `;
+        });
+
+        c.addEventListener("pointerdown", (event) => {
+            isDrawing = true;
+            const rect = c.getBoundingClientRect();
+
+            lastX = event.clientX - rect.left;
+            lastY = event.clientY - rect.top;
+        });
+        c.addEventListener("pointerup", (event) => {
+            isDrawing = false;
+        });
+        c.addEventListener("pointercancel", (event) => {
+            isDrawing = false;
+        });
+        c.addEventListener("pointermove", (event) => {
+            if (isDrawing) {
+                const rect = c.getBoundingClientRect();
+                const x = event.clientX - rect.left;
+                const y = event.clientY - rect.top;
+
+                ctx.moveTo(lastX, lastY);
+                ctx.lineTo(x, y);
+                ctx.stroke();
+
+                lastX = x;
+                lastY = y;
+            }
+        });
+        function clearCanvas() {
+            ctx.beginPath();
+            ctx.clearRect(0, 0, c.width, c.height);
+        }
+        function randomLetter() {
+            let checked = [...document.querySelectorAll('input[type="checkbox"]:checked')].map(checkbox => checkbox.value);
+            curLetter = checked[Math.floor(Math.random() * checked.length)];
+            lettertext.innerHTML = curLetter.toUpperCase();
+            letterimage.src = null;
+            clearCanvas();
+        }
+        function checkLetter() {
+            letterimage.src = "yoylese/" + curLetter + ".png";
+        }
+    </script> 
+</body>
+</html>
