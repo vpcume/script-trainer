@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Script Trainer</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 16px;
+            font-family: sans-serif;
+            text-align: center;
+        }
+
+        #lettertext {
+            font-size: 2rem;
+        }
+
+        #myCanvas {
+            display: block;
+            width: min(90vw, 400px);
+            height: min(90vw, 400px);
+            margin: 16px auto;
+            border: 1px solid black;
+
+            /* Prevent scrolling/zooming while drawing */
+            touch-action: none;
+        }
+
+        #letterimage {
+            max-width: 90vw;
+            max-height: 200px;
+        }
+
+        button {
+            padding: 12px 16px;
+            margin: 4px;
+            font-size: 1rem;
+            touch-action: manipulation;
+        }
+
+        #list {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 16px;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        #list label {
+            padding: 8px;
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <b id="lettertext"></b>
+
+    <canvas id="myCanvas" width="400" height="400"></canvas>
+
+    <img id="letterimage">
+    <br>
+
+    <button type="button" onclick="clearCanvas()">Clear</button>
+    <button type="button" onclick="randomLetter()">Random Letter</button>
+    <button type="button" onclick="checkLetter()">Check</button>
+
+    <div id="list"></div>
+
+    <script>
+        const c = document.getElementById("myCanvas");
+        const lettertext = document.getElementById("lettertext");
+        const letterimage = document.getElementById("letterimage");
+        const ctx = c.getContext("2d");
+        const list = document.getElementById("list");
+
+        let lastX;
+        let lastY;
+        let isDrawing = false;
+
+        ctx.lineWidth = 3;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+
+        const yoylese = [
+            'a','b','c','d','e','f','g','h','i','j','k','l','m',
+            'n','o','p','q','r','s','t','u','v','w','x','y','z'
+        ];
+
+        let curLetter =
+            yoylese[Math.floor(Math.random() * yoylese.length)];
+
+        lettertext.textContent = curLetter.toUpperCase();
+
+        // Create checkboxes
+        yoylese.forEach((letter, index) => {
+            list.innerHTML += `
+                <label>
+                    <input type="checkbox"
+                           value="${letter}"
+                           data-index="${index}"
+                           checked>
+                    ${letter}
+                </label>
+            `;
+        });
+
+
+        // -------------------------
+        // Drawing
+        // -------------------------
+
+        function getCanvasPosition(event) {
+            const rect = c.getBoundingClientRect();
+
+            // Convert screen coordinates to canvas coordinates.
+            return {
+                x: (event.clientX - rect.left) * (c.width / rect.width),
+                y: (event.clientY - rect.top) * (c.height / rect.height)
+            };
+        }
+
+        c.addEventListener("pointerdown", (event) => {
+            isDrawing = true;
+
+            const pos = getCanvasPosition(event);
+
+            lastX = pos.x;
+            lastY = pos.y;
+
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+
+            // Keep receiving pointer events even if finger moves
+            // slightly outside the canvas.
+            c.setPointerCapture(event.pointerId);
+        });
+
+        c.addEventListener("pointermove", (event) => {
+            if (!isDrawing) return;
+
+            const pos = getCanvasPosition(event);
+
+            ctx.lineTo(pos.x, pos.y);
+            ctx.stroke();
+
+            lastX = pos.x;
+            lastY = pos.y;
+        });
+
+        c.addEventListener("pointerup", (event) => {
+            isDrawing = false;
+
+            c.releasePointerCapture(event.pointerId);
+        });
+
+        c.addEventListener("pointercancel", () => {
+            isDrawing = false;
+        });
+
+
+        // -------------------------
+        // Buttons
+        // -------------------------
+
+        function clearCanvas() {
+            ctx.clearRect(0, 0, c.width, c.height);
+            ctx.beginPath();
+        }
+
+        function randomLetter() {
+            const checked = [
+                ...document.querySelectorAll(
+                    'input[type="checkbox"]:checked'
+                )
+            ].map(checkbox => checkbox.value);
+
+            if (checked.length === 0) {
+                alert("Select at least one letter.");
+                return;
+            }
+
+            curLetter =
+                checked[Math.floor(Math.random() * checked.length)];
+
+            lettertext.textContent = curLetter.toUpperCase();
+
+            letterimage.removeAttribute("src");
+
+            clearCanvas();
+        }
+
+        function checkLetter() {
+            letterimage.src = "yoylese/" + curLetter + ".png";
+        }
+    </script>
+
+</body>
+</html>
